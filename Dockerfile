@@ -17,37 +17,10 @@ RUN pnpm run build
 
 FROM nginx:stable-alpine
 
-# Remove configuração padrão
-RUN rm -rf /usr/share/nginx/html/*
-
-# Copia os arquivos compilados
+# Remove configuração padrão e copia a nova
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Cria configuração nginx personalizada inline
-RUN cat > /etc/nginx/conf.d/default.conf << 'EOF'
-server {
-    listen 5552 default_server;
-    server_name _;
-    
-    root /usr/share/nginx/html;
-    index index.html index.htm;
-    
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css text/javascript application/json application/javascript;
-    
-    # Static files cache
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 1y;
-        add_header Cache-Control "public, immutable";
-    }
-    
-    # SPA routing
-    location / {
-        try_files $uri $uri/ /index.html;
-    }
-}
-EOF
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 5552
 
