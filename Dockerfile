@@ -16,10 +16,17 @@ COPY . .
 RUN pnpm run build
 
 FROM nginx:stable-alpine
-RUN rm -rf /usr/share/nginx/html/*
+RUN rm -rf /usr/share/nginx/html/* /etc/nginx/conf.d/default.conf
 COPY --from=builder /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Ajusta o Nginx para escutar na porta 5552
-RUN sed -i 's/listen\s\+80;/listen 5552;/' /etc/nginx/conf.d/default.conf
+# Instala curl para healthcheck
+RUN apk add --no-cache curl
+
 EXPOSE 5552
+
+# Healthcheck para EasyPanel
+HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
+  CMD curl -f http://localhost:5552/health || exit 1
+
 CMD ["nginx", "-g", "daemon off;"]
