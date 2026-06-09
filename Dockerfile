@@ -25,8 +25,4 @@ RUN apk add --no-cache curl
 
 EXPOSE 5552
 
-# Healthcheck para EasyPanel
-HEALTHCHECK --interval=10s --timeout=5s --start-period=15s --retries=3 \
-  CMD curl -f http://localhost:5552/health || exit 1
-
 CMD ["nginx", "-g", "daemon off;"]
